@@ -88,7 +88,7 @@ const useActiveCells = (inititalCells={}) => {
   return {activeCells, toggleCell, setActiveCells}
 }
 
-function App() {
+function App(props) {
   const { height, width }                         = useWindowDimensions();
   const [cellSide, setCellSide]                   = useState(20)
   const [cellSpacing, setCellSpacing]             = useState(2)
@@ -139,6 +139,11 @@ function App() {
 
   useEffect(() => {
     setInitialConfiguration()
+
+    // only used if project runs on homepage
+    if (props.onLoaded) {
+      props.onLoaded()
+    }
   }, [])
 
   useEffect(() => {
