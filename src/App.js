@@ -6,12 +6,14 @@ import './cssReset.css'
 import Slider from './components/Slider'
 import Draw from './Draw'
 
-const StyledContainer = styled.div`
+const StyledApp = styled.div`
   display: flex;
   flex-direction: column;
   height: 100vh;
   width: 100vw;
   justify-content: space-between;
+  position: absolute;
+  z-index: 2000;
 
   > canvas {
     width: 100vw;
@@ -168,7 +170,7 @@ function App(props) {
   }, (1000/updateFrequency))
 
   return (
-    <StyledContainer>
+    <StyledApp>
       <canvas ref={canvasRef} width={width} height={height-60} />
       <Toolbar
         onChangeUpdateFrequency={setUpdateFrequency}
@@ -190,7 +192,7 @@ function App(props) {
           }
         }}
       />
-    </StyledContainer>
+    </StyledApp>
   );
 }
 
