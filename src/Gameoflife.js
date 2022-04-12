@@ -131,7 +131,7 @@ export const Gameoflife = {
       let line = Array(rowLength).fill(0)
 
       if (currentKeyIndex < numKeys && i === sortedKeys[currentKeyIndex]) {
-        line = line.map((n, j) => cells[sortedKeys[currentKeyIndex]].has(mapRowMin + j) ? 1 : 0)
+        line = line.map((_, j) => cells[sortedKeys[currentKeyIndex]].has(mapRowMin + j) ? 1 : 0)
 
         currentKeyIndex += 1
       }

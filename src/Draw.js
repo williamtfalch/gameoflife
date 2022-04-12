@@ -16,7 +16,7 @@ const Draw = {
   },
 
   drawActiveCells: function(context, cells, cellSide, cellSpacing) {
-    context.fillStyle = "#94E1D0"
+    context.fillStyle = "#b3cec8"
 
     for (let row in cells) {
       for (let column of cells[row]) {

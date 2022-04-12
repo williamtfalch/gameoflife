@@ -10,7 +10,7 @@ const StyledSlider = styled.div`
   user-select:none;
 
   & p {
-    color: #2f4842;
+    color: #1e2f2b;
   }
 
   & > div:first-child {
@@ -77,7 +77,7 @@ const StyledSlider = styled.div`
   }
 `;
 
-const Slider = ({onSlide, name, vals = [0.1, 1, 10], sliderWidth = 130, diameter = 12}) => {
+const Slider = ({onSlide, name, vals = [0.1, 1, 10], sliderWidth = 110, diameter = 12}) => {
   const [isDragging, setIsDragging] =         useState(false)
   const [xOffset, setXOffset] =               useState(0)
   const [initialXOffset, setInitialXOffset] = useState(0)
