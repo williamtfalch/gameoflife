@@ -4,6 +4,7 @@ import { useWindowDimensions, useInterval } from './hooks.js'
 import styled from 'styled-components'
 import Slider from './components/Slider'
 import Draw from './Draw'
+import Camera from './Camera'
 
 const StyledApp = styled.div`
   display: flex;
@@ -28,7 +29,8 @@ const StyledApp = styled.div`
 
   > canvas {
     width: 100vw;
-    height: calc(100vh - 60px);
+    height: calc(100vh);
+    cursor: pointer;
   }
 
   > div:not(:last-of-type) {
@@ -63,15 +65,18 @@ const StyledToolbarButton = styled.span`
 `;
 
 const StyledToolbar = styled.div`
-  height: 60px;
-  width: 100%;
+  height: 75px;
+  width:350px;
   display: flex;
   flex-direction: row;
   align-items: center;
   justify-content: center;
   background-color: #679d91;
-  position: absolute;
-  bottom: 0;
+  position: fixed;
+  bottom: -5px;
+  left: 50%;
+  transform: translateX(-50%);
+  border-radius: 2px;
 
   > div, > span {
     margin: 0px 8px;
@@ -210,18 +215,115 @@ const Rules = ({setDisplay}) => {
         ))
       }
 
-      <StyledRulesButton onClick={() => setDisplay()}>I understand</StyledRulesButton>
+      <StyledRulesButton onClick={() => setDisplay()}>I solemnly swear to have fun!</StyledRulesButton>
     </StyledRules>
   )
 }
 
-const Toolbar = ({onChangeUpdateFrequency, onChangeZoom, isPlaying, onTogglePlay, onReset, didReset}) => (
+const Toolbar = ({onChangeUpdateFrequency, isPlaying, onTogglePlay, onReset, didReset, logger}) => (
   <StyledToolbar>
-    <Slider onSlide={onChangeUpdateFrequency} name="Update freq." />
     <StyledToolbarButton onClick={onTogglePlay}>{isPlaying ? "PAUSE" : "START"}</StyledToolbarButton>
+    <Slider onSlide={onChangeUpdateFrequency} name="Update frequency" />
     <StyledToolbarButton onClick={onReset}>{didReset ? "CLEAR" : "RESET"}</StyledToolbarButton>
-    <Slider onSlide={onChangeZoom} vals={[0.75, 1, 5]} name="Zoom" />
   </StyledToolbar>
+)
+
+const StyledLocation = styled.div`
+  position: fixed;
+  top: 10px;
+  right: 10px;
+  width: 50px;
+  height: 50px;
+  border-radius: 5px;
+  background-color: #f5f5f5;
+  border: 2px solid #b47684;
+  cursor: pointer;
+
+  > div:first-of-type {
+    width: 26px;
+    height: 26px;
+    position: absolute;
+    left: 8px;
+    top: 8px;
+    border: 4px solid #76b4a6;
+    border-radius: 50%;
+
+    > div {
+      width: 10px;
+      height: 10px;
+      background-color: #76b4a6;
+      border: 4px solid #76b4a6;
+      border-radius: 50%;
+      position: relative;
+      left: 4px;
+      top: 4px;
+    }
+  }
+
+  > div:not(:first-of-type) {
+    width: 4px;
+    height: 4px;
+    border: 2px;
+    border-top-left-radius: 2px;
+    border-top-right-radius: 2px;
+    background-color: #76b4a6;
+    position: absolute;
+
+    &:hover {
+      background-color: #679d91;
+    }
+  }
+
+  > div:nth-child(2) {
+    left: 23px;
+    top: 4px;
+  }
+
+  > div:nth-child(3) {
+    left: 23px;
+    top: 42px;
+    transform: rotate(180deg);
+  }
+
+  > div:nth-child(4) {
+    left: 42px;
+    top: 23px;
+    transform: rotate(90deg);
+  }
+
+  > div:nth-child(5) {
+    left: 4px;
+    top: 23px;
+    transform: rotate(-90deg);
+  }
+
+  &:hover {
+    > div:first-of-type {
+      border-color: #679d91;
+
+      > div {
+        background-color:  #679d91;
+        border-color: #679d91;
+      }
+    }
+
+    > div:not(:first-of-type) {
+      background-color: #679d91;
+    }
+  }
+`;
+
+const Location = ({onClick}) => (
+  <StyledLocation onClick={() => onClick()}>
+    <div>
+      <div />
+    </div>
+
+    <div />
+    <div />
+    <div />
+    <div />
+  </StyledLocation>
 )
 
 const useActiveCells = (inititalCells={}) => {
@@ -236,6 +338,10 @@ const useActiveCells = (inititalCells={}) => {
 
     if (copiedCells[y].has(x)) {
       copiedCells[y].delete(x)
+
+      if (copiedCells[y].size === 0) {
+        delete copiedCells[y]
+      }
     } else {
       copiedCells[y].add(x)
     }
@@ -243,35 +349,137 @@ const useActiveCells = (inititalCells={}) => {
     setActiveCells(copiedCells)
   }
 
-  return {activeCells, toggleCell, setActiveCells}
+  return [activeCells, toggleCell, setActiveCells]
 }
-
 
 ///////////////////////////////////////////////////////
 
 function App(props) {
-  const { height, width }                         = useWindowDimensions();
-  const [cellSide, setCellSide]                   = useState(20)
-  const [cellSpacing, setCellSpacing]             = useState(2)
-  const [numRows, setNumRows]                     = useState(0)
-  const [numColumns, setNumColumns]               = useState(0)
-  const [SyntheticAddition, setSyntheticAddition] = useState(5000)
-  const [zoom, setZoom]                           = useState(1)
-  const [updateFrequency, setUpdateFrequency]     = useState(1)
-  const [isPlaying, setIsPlaying]                 = useState(false)
-  const [didReset, setDidReset]                   = useState(true)
-  const canvasRef                                 = useRef(null)
-  const {activeCells, toggleCell, setActiveCells} = useActiveCells({})
-  const [displayRules, setDisplayRules]           = useState(true)
+  const { height, width }                             = useWindowDimensions();
+  const [cellSide, setCellSide]                       = useState(20)
+  const [cellSpacing, setCellSpacing]                 = useState(2)
+  const [updateFrequency, setUpdateFrequency]         = useState(1)
+  const [isPlaying, setIsPlaying]                     = useState(false)
+  const [didReset, setDidReset]                       = useState(true)
+  const canvasRef                                     = useRef(null)
+  const [activeCells, toggleCell, setActiveCells]     = useActiveCells({})
+  const [displayRules, setDisplayRules]               = useState(false)
+  const [isClicking, setIsClicking]                   = useState(false)
+  const [isDragging, setIsDragging]                   = useState(false)
+  const baseCellSide                                  = 20
+  const baseCellSpacing                               = 2
+  const [draggingCoordinates, setDraggingCoordinates] = useState({x: 0,y: 0})
+  const [camera, setCamera]                           = useState({x:0, y:0})
+  const [zoom, setZoom]                               = useState(1)
 
-  const onCanvasClick = event => {
-    const xCoor = event.clientX
-    const yCoor = event.clientY
+  const onCanvasMouseDown = event => {
+    const x = event.clientX
+    const y = event.clientY
 
-    const row = Math.floor(yCoor/(cellSide + cellSpacing))
-    const column = Math.floor(xCoor/(cellSide + cellSpacing))
+    setIsClicking(true)
+    setDraggingCoordinates({x,y})
+  }
 
-    toggleCell(row, column)
+  const onCanvasMouseMove = event => {
+    if (isClicking) {
+      if (!isDragging) {
+        setIsDragging(true)
+      }
+
+      const x     = event.clientX
+      const y     = event.clientY
+
+      setDraggingCoordinates({x,y})
+
+      const xDiff = x - draggingCoordinates.x
+      const yDiff = y - draggingCoordinates.y
+
+      const offset   = Camera.pixelOffset2cellOffset(xDiff, yDiff, cellSide, cellSpacing)
+
+      const newCam   = {
+        x: camera.x - (offset.x),
+        y: camera.y - (offset.y)
+      }
+
+      setCamera(newCam)
+    }
+  }
+
+  const onCanvasMouseUp = event => {
+    const x     = event.clientX
+    const y     = event.clientY
+
+    const xDiff = x - draggingCoordinates.x
+    const yDiff = y - draggingCoordinates.y
+
+    if (xDiff === 0 && yDiff === 0 && !isDragging) {
+      const offset = Camera.pixelOffset2cellOffset(x, y, cellSide, cellSpacing)
+      const xToggle = Math.floor(offset.x + camera.x)
+      const yToggle = Math.floor(offset.y + camera.y)
+
+      toggleCell(yToggle, xToggle) // TODO not working
+    } else {
+      setIsDragging(false)
+    }
+
+    setIsClicking(false)
+  }
+
+  const getDimensions = magnification => ({
+    x: width  / (magnification * (cellSide + cellSpacing)),
+    y: height / (magnification * (cellSide + cellSpacing)),
+  })
+
+  const onCanvasScroll = event => {
+    const zoomChangeConstant = 0.2
+    const INCREASE           = true
+    const minZoom            = 0.2
+    const maxZoom            = 3
+    const direction          = event.deltaY < 0
+    const directionFactor    = direction === INCREASE ? 1 : -1
+
+    const addition           = zoomChangeConstant * directionFactor
+    const newZoom            = zoom + addition
+
+    if ((direction === INCREASE && newZoom <= maxZoom) || (direction !== INCREASE && newZoom >= minZoom)) {
+      const newCellSide      = newZoom * baseCellSide
+      const newCellSpacing   = newZoom * baseCellSpacing
+      const zoomMoveConstant = 0.3
+
+      const relativeOffset   = {
+        x: ((event.clientX - (width/2))/(width/2)) * directionFactor,
+        y: ((event.clientY - (height/2))/(height/2)) * directionFactor
+      }
+
+      const currentDimensions = getDimensions(zoom)
+      const newDimensions     = getDimensions(newZoom)
+      const dimensionDiff     = {
+        x: (newDimensions.x - currentDimensions.x),
+        y: (newDimensions.y - currentDimensions.y)
+      }
+      
+      const newCamera         = {
+        x: camera.x - (dimensionDiff.x/2) - (relativeOffset.x * (dimensionDiff.x/2)),
+        y: camera.y - (dimensionDiff.y/2) - (relativeOffset.y * (dimensionDiff.y/2)),
+      }
+
+      setCellSide(newCellSide)
+      setCellSpacing(newCellSpacing)
+      setZoom(newZoom)
+      setCamera(newCamera)
+    }
+  }
+
+  const onLocationClick = _ => {
+    const center     = Gameoflife.getCenter(activeCells, true)
+    const dimensions = getDimensions(zoom)
+
+    const newCamera  = {
+      x: center.x - (dimensions.x/2),
+      y: center.y - (dimensions.y/2)
+    }
+
+    setCamera(newCamera)
   }
 
   const setInitialConfiguration = () => {
@@ -282,22 +490,18 @@ function App(props) {
       "3": new Set([1]),
     }
 
-    const xOffset = Math.floor((width/(cellSide+cellSpacing))/2)-1
-    const yOffset = Math.floor((height/(cellSide+cellSpacing))/2)-3
-
-    const shiftedCells = {}
-
-    for (let row in cells) {
-      const y = String(Number(row) + yOffset)
-
-      shiftedCells[y] = new Set()
-
-      for (let column of cells[row]) {
-        shiftedCells[y].add(column + xOffset)
-      }
+    // "1": new Set([0, 2]) TODO
+    const padding    = 10000 // if you move the camera more than 10k squares left of the middle, then the weird camera borders are on you ;)
+    const movedCells = Gameoflife.moveCells(cells, padding, padding)
+    const center     = Gameoflife.getCenter(movedCells, false)
+    const dimensions = getDimensions(zoom)
+    const initialCam = {
+      x: center.x - (dimensions.x/2),
+      y: center.y - (dimensions.y/2)
     }
 
-    setActiveCells(shiftedCells)
+    setCamera(initialCam)
+    setActiveCells(movedCells)
   }
 
   useEffect(() => {
@@ -310,38 +514,26 @@ function App(props) {
   }, [])
 
   useEffect(() => {
-    setNumRows(Math.ceil(height/(cellSide+cellSpacing)))
-    setNumColumns(Math.ceil(width/(cellSide+cellSpacing))) 
-  }, [width, height])
-
-  useEffect(() => {
-    setCellSide(zoom * 20)
-    setCellSpacing(zoom * 2)
-  }, [zoom])
-
-  useEffect(() => {
     const canvas = canvasRef.current
     const context = canvas.getContext('2d')
 
-    canvas.onclick = (event) => onCanvasClick(event)
-
-    Draw.draw(context, activeCells, width, height, cellSide, cellSpacing)
-  }, [activeCells, onCanvasClick, Draw.draw])
+    Draw.draw(context, activeCells, width, height, cellSide, cellSpacing, camera)
+  }, [activeCells, onCanvasMouseDown, onCanvasMouseUp, Draw.draw, camera])
 
   useInterval(() => {
     if (isPlaying) {
       const nextGeneration = Gameoflife.getNextGeneration(activeCells)
+      console.log(nextGeneration)
       setActiveCells(nextGeneration)
     }
   }, (1000/updateFrequency))
 
   return (
     <StyledApp block={displayRules}>
-      <canvas ref={canvasRef} width={width} height={height-60} />
+      <canvas ref={canvasRef} width={width} height={height} onWheel={onCanvasScroll} onMouseDown={onCanvasMouseDown} onMouseMove={onCanvasMouseMove} onMouseUp={onCanvasMouseUp} />
       <div />
       <Toolbar
         onChangeUpdateFrequency={setUpdateFrequency}
-        onChangeZoom={setZoom} 
         isPlaying={isPlaying} didReset={didReset} 
         onTogglePlay={() => {
           setIsPlaying(!isPlaying);
@@ -359,6 +551,7 @@ function App(props) {
           }
         }}
       />
+      <Location onClick={() => onLocationClick()} />
       {
         displayRules &&
           <Rules setDisplay={() => setDisplayRules(false)} />

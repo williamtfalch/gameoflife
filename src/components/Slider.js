@@ -9,52 +9,52 @@ const StyledSlider = styled.div`
   -moz-user-select:none;
   user-select:none;
 
-  & p {
-    color: #1e2f2b;
-  }
-
-  & > div:first-child {
+  > div:first-child {
     display: flex;
     position: relative;
     flex-direction: column;
     justify-content: space-between;
     height: 50px;
 
-    & > * {
+    > * {
       height: 20px;
       width: inherit;
     }
 
-    & > p {
+    > p {
       text-align: center;
+      position: relative;
+      top: -3px;
+      color: #eff5f4;
     }
 
-    & > div {
+    > div {
       display: flex;
       flex-direction: row;
       justify-content: space-between;
       position: relative;
     }
 
-    & > div p {
+    > div p {
       position: relative;
       top: 3px;
+      color: #141f1d;
     }
 
-    & > div p:nth-child(2) {
+    > div p:nth-child(2) {
       position: absolute;
       left: 50%;
       transform: translateX(-50%);
     }
   }
 
-  & > div:last-child {
+  > div:last-child {
     position: absolute;
     top: 8px;
     height: 30px;
     width: ${props => props.sliderWidth}px;
   
-    & > div {
+    > div {
       position: absolute;
       width: ${props => props.sliderWidth}px;
       height: 2px;
@@ -63,7 +63,7 @@ const StyledSlider = styled.div`
       background-color: #f5f5f5;
     }
 
-    & > span {
+    > span {
       position: absolute;
       height: ${props => props.diameter}px;
       width: ${props => props.diameter}px;
@@ -77,7 +77,7 @@ const StyledSlider = styled.div`
   }
 `;
 
-const Slider = ({onSlide, name, vals = [0.1, 1, 10], sliderWidth = 110, diameter = 12}) => {
+const Slider = ({onSlide, name, vals = [0.1, 1, 10], sliderWidth = 130, diameter = 12}) => {
   const [isDragging, setIsDragging] =         useState(false)
   const [xOffset, setXOffset] =               useState(0)
   const [initialXOffset, setInitialXOffset] = useState(0)

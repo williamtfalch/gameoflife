@@ -3,32 +3,59 @@ const Draw = {
     context.clearRect(0, 0, width, height)
   },
 
-  drawGrid: function(context, width, height, cellSide, cellSpacing) {
+  drawGrid: function(context, width, height, cellSide, cellSpacing, camera) {
     const numRows = Math.ceil(height/cellSide)
     const numColumns = Math.ceil(width/cellSide)
 
     context.fillStyle = "#f5f5f5"
     context.fillRect(0, 0, width, height)
-    
+
+    const xSubtraction = camera.x % 1
+    const ySubtraction = camera.y % 1
+
     context.fillStyle = "#76b4a6"
-    for (let r=0;r<numRows-1;r++) context.fillRect(0, (((r+1) * cellSide) + (r * cellSpacing)), width, cellSpacing)
-    for (let c=0;c<numColumns-1;c++) context.fillRect((((c+1) * cellSide) + (c * cellSpacing)), 0, cellSpacing, height)
+
+    for (let r=0;r<numRows;r++) {
+      const x = 0
+      const y = (((r+1) * cellSide) + (r * cellSpacing)) - (ySubtraction * (cellSide + cellSpacing))
+      
+      if (r===0) {
+        console.log(y)
+        console.log((((r+1) * cellSide) + (r * cellSpacing)))
+        console.log((ySubtraction * (cellSide + cellSpacing)))
+        //console.log(cellSide, cellSpacing, cam)
+        console.log("/")
+      }
+      context.fillRect(x, y, width, cellSpacing)
+    }
+
+    for (let c=0;c<numColumns;c++) {
+      const x = (((c+1) * cellSide) + (c * cellSpacing)) - (xSubtraction * (cellSide + cellSpacing))
+      const y = 0
+      context.fillRect(x, y, cellSpacing, height)
+    }
   },
 
-  drawActiveCells: function(context, cells, cellSide, cellSpacing) {
+  drawActiveCells: function(context, cells, cellSide, cellSpacing, camera) {
     context.fillStyle = "#b3cec8"
+  
+    const xPadding     = 1 - (camera.x % 1)
+    const yPadding     = 1 - (camera.y % 1)
 
     for (let row in cells) {
       for (let column of cells[row]) {
-        context.fillRect((cellSide + cellSpacing) * column, (cellSide + cellSpacing) * Number(row), cellSide, cellSide)
+        const x = (cellSide + cellSpacing) * (column + xPadding - Math.ceil(camera.x)) 
+        const y = (cellSide + cellSpacing) * (Number(row) + yPadding - Math.ceil(camera.y))
+
+        context.fillRect(x, y, cellSide, cellSide)
       }
     }
   },
 
-  draw: function(context, cells, canvasWidth, canvasHeight, cellSide, cellSpacing) {
+  draw: function(context, cells, canvasWidth, canvasHeight, cellSide, cellSpacing, camera) {
     this.clearCanvas(context, canvasWidth, canvasHeight)
-    this.drawGrid(context, canvasWidth, canvasHeight, cellSide, cellSpacing)
-    this.drawActiveCells(context, cells, cellSide, cellSpacing)
+    this.drawGrid(context, canvasWidth, canvasHeight, cellSide, cellSpacing, camera)
+    this.drawActiveCells(context, cells, cellSide, cellSpacing, camera)
   }
 }
 

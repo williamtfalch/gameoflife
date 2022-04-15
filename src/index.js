@@ -5,6 +5,8 @@ import App from './App';
 import { GlobalStyles } from './GlobalStyles'
 import reportWebVitals from './reportWebVitals';
 
+console.warn = () => {}
+
 ReactDOM.render(
   <React.StrictMode>
     <GlobalStyles />

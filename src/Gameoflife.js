@@ -169,16 +169,74 @@ export const Gameoflife = {
     return [xOffset, yOffset, normalizedMap]
   },
 
-  centerCells: function(cells) {
-    return cells
+  moveCells(cells, xPadding, yPadding) {
+    const movedCells = {}
+
+    for (let row in cells) {
+      const rowNumber = parseInt(row)
+      const newRowNumber = (rowNumber + yPadding).toString()
+
+      movedCells[newRowNumber] = new Set()
+
+      for (let column of cells[rowNumber]) {
+        const columnNumber    = parseInt(column)
+        const newColumnNumber = columnNumber + xPadding
+
+        movedCells[newRowNumber].add(newColumnNumber)
+      }
+    }
+
+    return movedCells
+  },
+
+  getCenter: function(cells, weighted) {
+    if (!weighted) {
+      const ys   = Object.keys(cells).map(k => parseInt(k))
+      const xs   = Object.values(cells).reduce((prev, row) => [...prev, ...[...row]], [])
+
+      const xMin = Math.min(...xs)
+      const xMax = Math.max(...xs)
+      const yMin = Math.min(...ys)
+      const yMax = Math.max(...ys)
+
+      return {
+        x: xMin + ((1 + xMax - xMin)/2),
+        y: yMin + ((1 + yMax - yMin)/2)
+      }
+    } else {
+      const ys        = {}
+      const xs        = {}
+      let numCells    = 0
+
+      for (let row in cells) {
+        const rowSize = cells[row].size
+
+        ys[row]       = rowSize
+        numCells     += rowSize
+
+        for (let column of cells[row]) {
+          if (!xs.hasOwnProperty(column)) {
+            xs[column] = 0
+          }
+
+          xs[column] += 1
+        }
+      }
+
+      console.log(xs, ys, numCells)
+
+      return {
+        x: (Object.entries(xs).reduce((total, [column, numEntries]) => total + ((parseInt(column) + 0.5) * numEntries), 0) / numCells),
+        y: (Object.entries(ys).reduce((total, [row, numEntries]) => total + ((parseInt(row) + 0.5) * numEntries), 0) / numCells)
+      }
+    }
   },
 
   getNextGeneration: function(cells) {
     const cellCandidates = this.getCellCandidates(cells)                 // {n: {}}
-    const newCells = this.getCellsFromCandidates(cellCandidates)         // {n: Set()}
+    const newCells       = this.getCellsFromCandidates(cellCandidates)   // {n: Set()}
     const survivingCells = this.getSurvivingCells(cells)                 // {n: Set()}
-    const mergedCells = this.mergeCells(newCells, survivingCells)        // {n: Set()}
-    const centeredCells = this.centerCells(mergedCells)                  // {n: Set()}
+    const mergedCells    = this.mergeCells(newCells, survivingCells)     // {n: Set()}
 
     return mergedCells
   },
