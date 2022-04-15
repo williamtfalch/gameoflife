@@ -19,13 +19,6 @@ const Draw = {
       const x = 0
       const y = (((r+1) * cellSide) + (r * cellSpacing)) - (ySubtraction * (cellSide + cellSpacing))
       
-      if (r===0) {
-        console.log(y)
-        console.log((((r+1) * cellSide) + (r * cellSpacing)))
-        console.log((ySubtraction * (cellSide + cellSpacing)))
-        //console.log(cellSide, cellSpacing, cam)
-        console.log("/")
-      }
       context.fillRect(x, y, width, cellSpacing)
     }
 

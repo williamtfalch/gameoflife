@@ -1,6 +1,6 @@
 import { Gameoflife } from './Gameoflife'
 import { useEffect, useRef, useState } from 'react'
-import { useWindowDimensions, useInterval } from './hooks.js'
+import { useWindowDimensions, useInterval, useActiveCells } from './hooks.js'
 import styled from 'styled-components'
 import Slider from './components/Slider'
 import Draw from './Draw'
@@ -101,6 +101,8 @@ const StyledRules = styled.div`
   padding: 20px;
 
   > div {
+    width: 100%;
+
     > span {
       font-size: 16px;
       line-height: 20px;
@@ -110,9 +112,45 @@ const StyledRules = styled.div`
     > div {
       display: flex;
       flex-direction: row;
-      justify-content: space-around;
+      justify-content: center;
       position: relative;
-      margin: 10px 0px 20px 0px;
+      margin: 15px 0px 20px 0px;
+
+      > div.arrow {
+        position: relative;
+        width: 30px;
+        margin: 0px 30px;
+        display: flex;
+        align-items: center;
+
+        > div {
+          position: absolute;
+          background-color: #679d91;
+          border-radius: 2px;
+        }
+
+        > div:nth-child(1) {
+          width: 20px;
+          height: 4px;
+          left: 3px;
+        }
+
+        > div:nth-child(2), > div:nth-child(3) {
+          width: 15px;
+          height: 4px;
+          left: 13px;
+        }
+
+        > div:nth-child(2) {
+          transform: rotate(45deg);
+          top: 33px;
+        }
+
+        > div:nth-child(3) {
+          transform: rotate(-45deg);
+          top: 41px;
+        }
+      }
     }
   }
 `;
@@ -167,6 +205,136 @@ const StyledPreviewCell = styled.div`
   left: ${props => props.column * 27}px;
 `;
 
+
+const StyledDisplayRules = styled.div`
+  position: fixed;
+  top: 10px;
+  right: 80px;
+  width: 46px;
+  height: 46px;
+  border-radius: 5px;
+  background-color: #f5f5f5;
+  border: 4px solid #b47684;
+  cursor: pointer;
+
+  > div {
+    position: relative;
+    height: 18px;
+    width: 16px;
+    border: 4px solid #76b4a6;
+    border-radius: 5px;
+    left: 8px;
+    top: 4px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: space-between;
+    padding: 6px 3px;
+
+    > div {
+      width: 15px;
+      height: 4px;
+      border-radius: 2px;
+      background-color: #76b4a6;
+    }
+  }
+
+  &:hover {
+    > div {
+      border-color: #679d91;
+
+      > div {
+        background-color: #679d91;
+      }
+    }
+  }
+`;
+
+const StyledLocation = styled.div`
+  position: fixed;
+  top: 10px;
+  right: 10px;
+  width: 46px;
+  height: 46px;
+  border-radius: 5px;
+  background-color: #f5f5f5;
+  border: 4px solid #b47684;
+  cursor: pointer;
+
+  > div:first-of-type {
+    width: 26px;
+    height: 26px;
+    position: absolute;
+    left: 6px;
+    top: 6px;
+    border: 4px solid #76b4a6;
+    border-radius: 50%;
+
+    > div {
+      width: 10px;
+      height: 10px;
+      background-color: #76b4a6;
+      border: 4px solid #76b4a6;
+      border-radius: 50%;
+      position: relative;
+      left: 4px;
+      top: 4px;
+    }
+  }
+
+  > div:not(:first-of-type) {
+    width: 4px;
+    height: 4px;
+    border: 2px;
+    border-top-left-radius: 2px;
+    border-top-right-radius: 2px;
+    background-color: #76b4a6;
+    position: absolute;
+
+    &:hover {
+      background-color: #679d91;
+    }
+  }
+
+  > div:nth-child(2) {
+    left: 21px;
+    top: 2px;
+  }
+
+  > div:nth-child(3) {
+    left: 21px;
+    top: 40px;
+    transform: rotate(180deg);
+  }
+
+  > div:nth-child(4) {
+    left: 40px;
+    top: 21px;
+    transform: rotate(90deg);
+  }
+
+  > div:nth-child(5) {
+    left: 2px;
+    top: 21px;
+    transform: rotate(-90deg);
+  }
+
+  &:hover {
+    > div:first-of-type {
+      border-color: #679d91;
+
+      > div {
+        background-color:  #679d91;
+        border-color: #679d91;
+      }
+    }
+
+    > div:not(:first-of-type) {
+      background-color: #679d91;
+    }
+  }
+`;
+
 ///////////////////////////////////////////////////////
 
 const PreviewCell = ({index, fill, active}) => (
@@ -204,7 +372,7 @@ const Rules = ({setDisplay}) => {
             <span>{`${index + 1}. ${rule}`}</span>
             <div>
               <Preview activeCell={activeCell} cells={liveCells} />
-              <div>
+              <div className="arrow">
                 <div />
                 <div />
                 <div />
@@ -215,7 +383,7 @@ const Rules = ({setDisplay}) => {
         ))
       }
 
-      <StyledRulesButton onClick={() => setDisplay()}>I solemnly swear to have fun!</StyledRulesButton>
+      <StyledRulesButton onClick={() => setDisplay()}>I swear to have fun!</StyledRulesButton>
     </StyledRules>
   )
 }
@@ -228,90 +396,16 @@ const Toolbar = ({onChangeUpdateFrequency, isPlaying, onTogglePlay, onReset, did
   </StyledToolbar>
 )
 
-const StyledLocation = styled.div`
-  position: fixed;
-  top: 10px;
-  right: 10px;
-  width: 50px;
-  height: 50px;
-  border-radius: 5px;
-  background-color: #f5f5f5;
-  border: 2px solid #b47684;
-  cursor: pointer;
 
-  > div:first-of-type {
-    width: 26px;
-    height: 26px;
-    position: absolute;
-    left: 8px;
-    top: 8px;
-    border: 4px solid #76b4a6;
-    border-radius: 50%;
-
-    > div {
-      width: 10px;
-      height: 10px;
-      background-color: #76b4a6;
-      border: 4px solid #76b4a6;
-      border-radius: 50%;
-      position: relative;
-      left: 4px;
-      top: 4px;
-    }
-  }
-
-  > div:not(:first-of-type) {
-    width: 4px;
-    height: 4px;
-    border: 2px;
-    border-top-left-radius: 2px;
-    border-top-right-radius: 2px;
-    background-color: #76b4a6;
-    position: absolute;
-
-    &:hover {
-      background-color: #679d91;
-    }
-  }
-
-  > div:nth-child(2) {
-    left: 23px;
-    top: 4px;
-  }
-
-  > div:nth-child(3) {
-    left: 23px;
-    top: 42px;
-    transform: rotate(180deg);
-  }
-
-  > div:nth-child(4) {
-    left: 42px;
-    top: 23px;
-    transform: rotate(90deg);
-  }
-
-  > div:nth-child(5) {
-    left: 4px;
-    top: 23px;
-    transform: rotate(-90deg);
-  }
-
-  &:hover {
-    > div:first-of-type {
-      border-color: #679d91;
-
-      > div {
-        background-color:  #679d91;
-        border-color: #679d91;
-      }
-    }
-
-    > div:not(:first-of-type) {
-      background-color: #679d91;
-    }
-  }
-`;
+const DisplayRules = ({onClick}) => (
+  <StyledDisplayRules onClick={() => onClick()}>
+    <div>
+      <div />
+      <div />
+      <div />
+    </div>
+  </StyledDisplayRules>
+)
 
 const Location = ({onClick}) => (
   <StyledLocation onClick={() => onClick()}>
@@ -326,32 +420,6 @@ const Location = ({onClick}) => (
   </StyledLocation>
 )
 
-const useActiveCells = (inititalCells={}) => {
-  const [activeCells, setActiveCells] = useState(inititalCells)
-
-  const toggleCell = (y,x) => {
-    const copiedCells = Object.assign({}, activeCells)
-
-    if (!copiedCells.hasOwnProperty(y)) {
-      copiedCells[y] = new Set()
-    }
-
-    if (copiedCells[y].has(x)) {
-      copiedCells[y].delete(x)
-
-      if (copiedCells[y].size === 0) {
-        delete copiedCells[y]
-      }
-    } else {
-      copiedCells[y].add(x)
-    }
-
-    setActiveCells(copiedCells)
-  }
-
-  return [activeCells, toggleCell, setActiveCells]
-}
-
 ///////////////////////////////////////////////////////
 
 function App(props) {
@@ -363,14 +431,14 @@ function App(props) {
   const [didReset, setDidReset]                       = useState(true)
   const canvasRef                                     = useRef(null)
   const [activeCells, toggleCell, setActiveCells]     = useActiveCells({})
-  const [displayRules, setDisplayRules]               = useState(false)
+  const [displayRules, setDisplayRules]               = useState(true)
   const [isClicking, setIsClicking]                   = useState(false)
   const [isDragging, setIsDragging]                   = useState(false)
-  const baseCellSide                                  = 20
-  const baseCellSpacing                               = 2
   const [draggingCoordinates, setDraggingCoordinates] = useState({x: 0,y: 0})
   const [camera, setCamera]                           = useState({x:0, y:0})
   const [zoom, setZoom]                               = useState(1)
+  const baseCellSide                                  = 20
+  const baseCellSpacing                               = 2
 
   const onCanvasMouseDown = event => {
     const x = event.clientX
@@ -426,8 +494,8 @@ function App(props) {
   }
 
   const getDimensions = magnification => ({
-    x: width  / (magnification * (cellSide + cellSpacing)),
-    y: height / (magnification * (cellSide + cellSpacing)),
+    x: width  / (magnification * (baseCellSide + baseCellSpacing)),
+    y: height / (magnification * (baseCellSide + baseCellSpacing)),
   })
 
   const onCanvasScroll = event => {
@@ -444,7 +512,7 @@ function App(props) {
     if ((direction === INCREASE && newZoom <= maxZoom) || (direction !== INCREASE && newZoom >= minZoom)) {
       const newCellSide      = newZoom * baseCellSide
       const newCellSpacing   = newZoom * baseCellSpacing
-      const zoomMoveConstant = 0.3
+      const offsetFactor     = rOffset => (Math.log2(1 + 50* Math.abs(rOffset))/20) * Math.sign(rOffset)
 
       const relativeOffset   = {
         x: ((event.clientX - (width/2))/(width/2)) * directionFactor,
@@ -459,8 +527,8 @@ function App(props) {
       }
       
       const newCamera         = {
-        x: camera.x - (dimensionDiff.x/2) - (relativeOffset.x * (dimensionDiff.x/2)),
-        y: camera.y - (dimensionDiff.y/2) - (relativeOffset.y * (dimensionDiff.y/2)),
+        x: camera.x - (dimensionDiff.x/2) - (offsetFactor(relativeOffset.x) * (dimensionDiff.x/2)),
+        y: camera.y - (dimensionDiff.y/2) - (offsetFactor(relativeOffset.y) * (dimensionDiff.y/2)),
       }
 
       setCellSide(newCellSide)
@@ -484,13 +552,20 @@ function App(props) {
 
   const setInitialConfiguration = () => {
     const cells = {
-      "0": new Set([1]),
-      "1": new Set([0, 2]),
-      "2": new Set([0, 1, 2]),
-      "3": new Set([1]),
+      "0": new Set([3, 4, 10, 11]),
+      "1": new Set([2, 5, 9, 12]),
+      "2": new Set([2, 12]),
+      "3": new Set([6, 8]),
+      "4": new Set([3, 11]),
+      "5": new Set([4, 10]),
+      "6": new Set([1, 5, 9, 13]),
+      "7": new Set([0, 2, 6, 7, 8, 12, 14]),
+      "8": new Set([0, 2, 12, 14]),
+      "9": new Set([1, 13]),
+      "10": new Set([4, 5, 9, 10]),
+      "11": new Set([4, 5, 9, 10]),
     }
 
-    // "1": new Set([0, 2]) TODO
     const padding    = 10000 // if you move the camera more than 10k squares left of the middle, then the weird camera borders are on you ;)
     const movedCells = Gameoflife.moveCells(cells, padding, padding)
     const center     = Gameoflife.getCenter(movedCells, false)
@@ -500,6 +575,7 @@ function App(props) {
       y: center.y - (dimensions.y/2)
     }
 
+    
     setCamera(initialCam)
     setActiveCells(movedCells)
   }
@@ -553,8 +629,10 @@ function App(props) {
       />
       <Location onClick={() => onLocationClick()} />
       {
-        displayRules &&
+        displayRules ?
           <Rules setDisplay={() => setDisplayRules(false)} />
+        :
+          <DisplayRules onClick={() => setDisplayRules(dr => !dr)} />
       }
     </StyledApp>
   );

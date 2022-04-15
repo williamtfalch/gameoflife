@@ -223,8 +223,6 @@ export const Gameoflife = {
         }
       }
 
-      console.log(xs, ys, numCells)
-
       return {
         x: (Object.entries(xs).reduce((total, [column, numEntries]) => total + ((parseInt(column) + 0.5) * numEntries), 0) / numCells),
         y: (Object.entries(ys).reduce((total, [row, numEntries]) => total + ((parseInt(row) + 0.5) * numEntries), 0) / numCells)

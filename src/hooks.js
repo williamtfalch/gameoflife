@@ -54,3 +54,29 @@ export function useInterval(callback, delay) {
     }
   }, [delay]);
 }
+
+export const useActiveCells = (inititalCells={}) => {
+  const [activeCells, setActiveCells] = useState(inititalCells)
+
+  const toggleCell = (y,x) => {
+    const copiedCells = Object.assign({}, activeCells)
+
+    if (!copiedCells.hasOwnProperty(y)) {
+      copiedCells[y] = new Set()
+    }
+
+    if (copiedCells[y].has(x)) {
+      copiedCells[y].delete(x)
+
+      if (copiedCells[y].size === 0) {
+        delete copiedCells[y]
+      }
+    } else {
+      copiedCells[y].add(x)
+    }
+
+    setActiveCells(copiedCells)
+  }
+
+  return [activeCells, toggleCell, setActiveCells]
+}
